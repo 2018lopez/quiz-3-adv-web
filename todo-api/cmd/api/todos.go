@@ -3,6 +3,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -64,6 +65,39 @@ func (app *application) createTodoHandler(w http.ResponseWriter, r *http.Request
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
+	}
+
+}
+
+// get todo task by id
+func (app *application) showTodoHandler(w http.ResponseWriter, r *http.Request) {
+
+	//read id parameter
+	id, err := app.readIdParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	//fetch the specifc todo tasks
+	todo, err := app.models.Todos.Get(id)
+
+	//handler errors
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			app.notFoundResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+	}
+
+	//write json data return by get
+	err = app.writeJSON(w, http.StatusOK, envelope{"todo": todo}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, nil)
+
 	}
 
 }

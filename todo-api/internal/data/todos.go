@@ -5,6 +5,7 @@ package data
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"todo.imerlopez.net/internal/validator"
@@ -56,4 +57,53 @@ func (m TodoModel) Insert(todo *Todo) error {
 	defer cancel()
 
 	return m.DB.QueryRowContext(ctx, query, args...).Scan(&todo.ID, &todo.CreatedAt)
+}
+
+// Get() allow us to retrieve a specific todo task by id
+func (m TodoModel) Get(id int64) (*Todo, error) {
+
+	//Ensure id is valid
+	if id < 1 {
+		return nil, ErrRecordNotFound
+	}
+
+	//query to get todo task by id
+	query :=
+		`
+		SELECT id, created_at, title, description, completed 
+			FROM todo
+			WHERE id = $1
+	`
+
+	//Declare Todo variable to hold return results
+
+	var todo Todo
+
+	//create context,
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup memory
+	defer cancel()
+
+	//Execute the query using QueryRow()
+
+	err := m.DB.QueryRowContext(ctx, query, id).Scan(
+		&todo.ID,
+		&todo.CreatedAt,
+		&todo.Title,
+		&todo.Description,
+		&todo.Completed,
+	)
+	if err != nil {
+		//check type of err
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return nil, ErrRecordNotFound
+		default:
+			return nil, err
+		}
+	}
+
+	//Success
+	return &todo, nil
 }
