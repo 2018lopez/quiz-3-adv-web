@@ -14,10 +14,13 @@ var (
 
 // A wrapper for our data models
 type Models struct {
+	Todos TodoModel
 }
 
 // NewModels allow us to create a new models
 func NewModels(db *sql.DB) Models {
 
-	return Models{}
+	return Models{
+		Todos: TodoModel{DB: db},
+	}
 }
