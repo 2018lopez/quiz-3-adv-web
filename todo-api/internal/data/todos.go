@@ -149,3 +149,48 @@ func (m TodoModel) Update(todo *Todo) error {
 
 	return nil
 }
+
+// Delete() remove a todo task by id
+func (m TodoModel) Delete(id int64) error {
+
+	//Verify if id is valid
+	if id < 1 {
+		return ErrRecordNotFound
+	}
+
+	//Delete query
+	query :=
+		`
+		DELETE FROM todo WHERE id = $1
+	`
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup to prevent memory leak
+	defer cancel()
+
+	//Execute Delete query
+	result, err := m.DB.ExecContext(ctx, query, id)
+
+	//Check for error
+	if err != nil {
+		return err
+
+	}
+
+	//check for how many rows were affected by the delete operation
+	//call the rowAffected method on the result var
+
+	rowsAffected, err := result.RowsAffected()
+
+	if err != nil {
+
+		return err
+	}
+
+	//check if no rows were affected
+	if rowsAffected == 0 {
+		return ErrRecordNotFound
+	}
+
+	return nil
+}
