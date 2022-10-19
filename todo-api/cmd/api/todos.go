@@ -233,3 +233,58 @@ func (app *application) deleteTodoHandler(w http.ResponseWriter, r *http.Request
 		app.serverErrorResponse(w, r, err)
 	}
 }
+
+//listing handler allows client to see a listing of todo tasks base on a set of criteria
+
+func (app *application) listTodosHandler(w http.ResponseWriter, r *http.Request) {
+
+	//create input struct for params
+	var input struct {
+		Title string
+		data.Filters
+	}
+
+	//Initilize a validator
+	v := validator.New()
+
+	//get the url values map
+
+	qs := r.URL.Query()
+
+	//use the help method to extract values
+	input.Title = app.readString(qs, "title", "")
+
+	//get the page info
+	input.Filters.Page = app.readInt(qs, "page", 1, v)
+	input.Filters.PageSize = app.readInt(qs, "page_size", 4, v)
+
+	//sort info
+	input.Filters.Sort = app.readString(qs, "sort", "id")
+
+	//specific the allowed sortValues
+	input.Filters.SortList = []string{"id", "title", "completed", "-id", "-title", "-completed"}
+
+	//check for validation errors
+
+	if data.ValidateFilters(v, input.Filters); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	//get listing of all todos
+	todos, err := app.models.Todos.GetAll(input.Title, input.Filters)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+	//send json response
+	err = app.writeJSON(w, http.StatusOK, envelope{"todos": todos}, nil)
+
+	if err != nil {
+		app.serverErrorResponse(w, r, err)
+		return
+	}
+
+}

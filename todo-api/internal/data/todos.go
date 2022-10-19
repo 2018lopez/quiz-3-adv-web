@@ -6,6 +6,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	"time"
 
 	"todo.imerlopez.net/internal/validator"
@@ -193,4 +194,64 @@ func (m TodoModel) Delete(id int64) error {
 	}
 
 	return nil
+}
+
+//get all method returns a list of all schools sort by id
+
+func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
+	//construct query
+
+	query := fmt.Sprintf(`
+		SELECT id, created_at, title, description, completed
+		FROM todo
+		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
+		
+		ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortOrder())
+	//CREATE a 3 sec timeout context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	//execute
+	rows, err := m.DB.QueryContext(ctx, query, title)
+
+	if err != nil {
+		return nil, err
+	}
+
+	//close the result set
+	defer rows.Close()
+
+	//Initialize an empty slice to hold Todo data
+	todos := []*Todo{}
+
+	//iterate over the rows in the result set
+
+	for rows.Next() {
+		var todo Todo
+		//scan the values from row into todo struct
+		err := rows.Scan(
+			&todo.ID,
+			&todo.CreatedAt,
+			&todo.Title,
+			&todo.Description,
+			&todo.Completed,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		//add the todo to our slice
+		todos = append(todos, &todo)
+
+	}
+
+	//Check for errors after looping through the result set
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// return slice of todos
+	return todos, nil
+
 }
