@@ -70,9 +70,9 @@ func (m TodoModel) Get(id int64) (*Todo, error) {
 	//query to get todo task by id
 	query :=
 		`
-		SELECT id, created_at, title, description, completed 
-			FROM todo
-			WHERE id = $1
+		SELECT id, created_at, title, description, completed FROM todo
+		WHERE id = $1
+
 	`
 
 	//Declare Todo variable to hold return results
@@ -106,4 +106,46 @@ func (m TodoModel) Get(id int64) (*Todo, error) {
 
 	//Success
 	return &todo, nil
+}
+
+// Update() allow update todo task by id
+func (m TodoModel) Update(todo *Todo) error {
+
+	//query to update todo task record
+
+	query :=
+		`
+		UPDATE todo 
+		SET title = $1, description = $2, completed = $3
+		WHERE id = $4
+		RETURNING id
+		
+	`
+	//create context
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+
+	//cleanup to prevent memory leak
+	defer cancel()
+
+	args := []interface{}{
+		todo.Title,
+		todo.Description,
+		todo.Completed,
+		todo.ID,
+	}
+
+	//check for edit conflicts
+	err := m.DB.QueryRowContext(ctx, query, args...).Scan(&todo.ID)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+
+	}
+
+	return nil
 }

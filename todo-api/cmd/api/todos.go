@@ -101,3 +101,97 @@ func (app *application) showTodoHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 }
+
+// todo task update handler
+func (app *application) updateTodoHandler(w http.ResponseWriter, r *http.Request) {
+
+	//get id from parameter
+	id, err := app.readIdParam(r)
+	if err != nil {
+		app.notFoundResponse(w, r)
+		return
+	}
+
+	//fetch record from the db
+	todo, err := app.models.Todos.Get(id)
+
+	//handler errors
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrRecordNotFound):
+			fmt.Println("hd")
+			app.notFoundResponse(w, r)
+		default:
+			fmt.Println("h")
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	//create an input struct to hold data read in from client
+	//update input struct by pointer
+
+	var input struct {
+		Title       *string `json:"title"`
+		Description *string `json:"description"`
+		Completed   *bool   `json:"completed"`
+	}
+
+	//initialize the new json.decoder instance
+	err = app.readJSON(w, r, &input)
+
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+
+		return
+	}
+
+	//check for updates
+
+	if input.Title != nil {
+		todo.Title = *input.Title
+	}
+
+	if input.Description != nil {
+		todo.Description = *input.Description
+	}
+
+	if input.Completed != nil {
+		todo.Completed = *input.Completed
+	}
+
+	//initialize a new Validator instance
+	v := validator.New()
+
+	//check the map to determine if there were any validation errors
+	if data.ValidateTodo(v, todo); !v.Valid() {
+		app.failedValidationResponse(w, r, v.Errors)
+		return
+	}
+
+	//Pass the updated todo task record to update method
+	err = app.models.Todos.Update(todo)
+
+	if err != nil {
+		switch {
+		case errors.Is(err, data.ErrEditConflict):
+			app.editConflictResponse(w, r)
+		default:
+			app.serverErrorResponse(w, r, err)
+		}
+
+		return
+	}
+
+	//write data by get
+
+	err = app.writeJSON(w, http.StatusOK, envelope{"todo": todo}, nil)
+
+	if err != nil {
+
+		app.serverErrorResponse(w, r, err)
+
+	}
+
+}
