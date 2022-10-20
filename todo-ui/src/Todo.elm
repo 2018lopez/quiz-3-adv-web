@@ -13,8 +13,7 @@ type alias Model =
     , uid : Int
     , todos : List Todo
     }
-
-
+-- List Todo
 type alias Todo =
     { id : Int
     , title : String
@@ -23,11 +22,11 @@ type alias Todo =
     }
 -- Msg
 type Msg
-    = Add
-    | SetFieldTitle String
-    | SetFieldDetail String
-    | Delete Int
-    | CompleteTodo Int Bool
+    = Add -- when add button is click
+    | SetFieldTitle String -- set title input
+    | SetFieldDetail String -- set description input
+    | Delete Int -- when delete button is click
+    | CompleteTodo Int Bool -- when completed button is click
 
 -- Initial Model
 initialModel : Model
@@ -38,10 +37,10 @@ initialModel =
     , todos = []
     }
 
--- View
+-- View; Todo Form to add tasks - Input field for title, textrea for description, add  button to submit the form
 view : Model -> Html Msg
 view model =
-    div [ class "container" ] [ div [ class "todo-container text-left p-24 bg-white shadow-sm rounded flex flex-col mx-auto my-48" ]
+    div [ class "container" ] [ div [  ]
         [ header [ ]
             [ h1 [ class "header"] [ text "Todo App" ]
             ]
@@ -70,7 +69,7 @@ view model =
     
     ]
 
--- Display task input by user
+-- Display task input by user - Listing of all tasks
 viewTask : Todo -> Html Msg
 viewTask todo =
     li [ class "todo-item-group"  ]
@@ -95,7 +94,7 @@ viewTask todo =
         ]
 
         ]
--- Update
+-- Update - to add tasks, set fields data for title and description, delete task, completed task
 update : Msg -> Model -> Model
 update msg model =
     case msg of
