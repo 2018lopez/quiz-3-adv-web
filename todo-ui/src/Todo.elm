@@ -77,9 +77,13 @@ viewTask todo =
     
         [ 
         div [] [
-            span [ classList[("completed", todo.isComplete)] ] [  text todo.title ] 
+            div [ class "textTitle"] [
+                span [ classList[("completed", todo.isComplete)] ] [  text todo.title ] 
+            ]   
             , span [] [ text " : " ] 
-            , span [ classList[("completed", todo.isComplete)] ] [ text todo.description ]
+            , div [ class "textDescription" ] [
+                 span [ classList[("completed", todo.isComplete)] ] [ text todo.description ]
+            ]
         ]
         ,div [ class "actionBtn"][
           button

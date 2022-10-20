@@ -150,4 +150,12 @@ html, body {
 
 .textTitle{
     font-weight: bold;
+    display: inline;
+    font-size: 22px;
+}
+
+.textDescription{
+
+    display: inline;
+    font-size: 16px;
 }

@@ -5421,18 +5421,27 @@ var $author$project$Todo$viewTask = function (todo) {
 				_List_fromArray(
 					[
 						A2(
-						$elm$html$Html$span,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('completed textTitle', todo.isComplete)
-									]))
+								$elm$html$Html$Attributes$class('textTitle')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(todo.title)
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('completed', todo.isComplete)
+											]))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(todo.title)
+									]))
 							])),
 						A2(
 						$elm$html$Html$span,
@@ -5442,18 +5451,27 @@ var $author$project$Todo$viewTask = function (todo) {
 								$elm$html$Html$text(' : ')
 							])),
 						A2(
-						$elm$html$Html$span,
+						$elm$html$Html$div,
 						_List_fromArray(
 							[
-								$elm$html$Html$Attributes$classList(
-								_List_fromArray(
-									[
-										_Utils_Tuple2('completed', todo.isComplete)
-									]))
+								$elm$html$Html$Attributes$class('textDescription')
 							]),
 						_List_fromArray(
 							[
-								$elm$html$Html$text(todo.description)
+								A2(
+								$elm$html$Html$span,
+								_List_fromArray(
+									[
+										$elm$html$Html$Attributes$classList(
+										_List_fromArray(
+											[
+												_Utils_Tuple2('completed', todo.isComplete)
+											]))
+									]),
+								_List_fromArray(
+									[
+										$elm$html$Html$text(todo.description)
+									]))
 							]))
 					])),
 				A2(
