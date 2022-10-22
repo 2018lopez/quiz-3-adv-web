@@ -206,12 +206,13 @@ func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
 		FROM todo
 		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 		
-		ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortOrder())
+		ORDER BY %s %s, id ASC LIMIT $2 OFFSET $3`, filters.sortColumn(), filters.sortOrder())
 	//CREATE a 3 sec timeout context
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
+	args := []interface{}{title, filters.limit(), filters.offset()}
 	//execute
-	rows, err := m.DB.QueryContext(ctx, query, title)
+	rows, err := m.DB.QueryContext(ctx, query, args...)
 
 	if err != nil {
 		return nil, err

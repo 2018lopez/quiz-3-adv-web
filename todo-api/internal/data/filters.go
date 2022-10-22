@@ -3,6 +3,7 @@
 package data
 
 import (
+	"math"
 	"strings"
 
 	"todo.imerlopez.net/internal/validator"
@@ -43,4 +44,37 @@ func (f Filters) sortOrder() string {
 	}
 
 	return "ASC"
+}
+
+// The limit() method determines the LIMIT
+func (f Filters) limit() int {
+	return f.PageSize
+}
+
+// The offset() method calculates the OFFSET
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.PageSize
+}
+
+// The Metadata type contains metadata to help with pagination
+type Metadata struct {
+	CurrentPage  int `json:"current_page,omitempty"`
+	PageSize     int `json:"page_size,omitempty"`
+	FirstPage    int `json:"first_page,omitempty"`
+	LastPage     int `json:"last_page,omitempty"`
+	TotalRecords int `json:"total_records,omitempty"`
+}
+
+// The calculateMetadata() function computes the values for the Metadata fields
+func calculateMetadata(totalRecrods int, page int, pageSize int) Metadata {
+	if totalRecrods == 0 {
+		return Metadata{}
+	}
+	return Metadata{
+		CurrentPage:  page,
+		PageSize:     pageSize,
+		FirstPage:    1,
+		LastPage:     int(math.Ceil(float64(totalRecrods) / float64(pageSize))),
+		TotalRecords: totalRecrods,
+	}
 }
