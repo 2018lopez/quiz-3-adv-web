@@ -272,7 +272,7 @@ func (app *application) listTodosHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	//get listing of all todos
-	todos, err := app.models.Todos.GetAll(input.Title, input.Filters)
+	todos, metadata, err := app.models.Todos.GetAll(input.Title, input.Filters)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)
@@ -280,7 +280,7 @@ func (app *application) listTodosHandler(w http.ResponseWriter, r *http.Request)
 	}
 
 	//send json response
-	err = app.writeJSON(w, http.StatusOK, envelope{"todos": todos}, nil)
+	err = app.writeJSON(w, http.StatusOK, envelope{"todos": todos, "metadata": metadata}, nil)
 
 	if err != nil {
 		app.serverErrorResponse(w, r, err)

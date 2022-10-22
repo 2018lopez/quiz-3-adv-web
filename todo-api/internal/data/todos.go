@@ -198,11 +198,11 @@ func (m TodoModel) Delete(id int64) error {
 
 //get all method returns a list of all schools sort by id
 
-func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
+func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, Metadata, error) {
 	//construct query
 
 	query := fmt.Sprintf(`
-		SELECT id, created_at, title, description, completed
+		SELECT COUNT(*) OVER(), id, created_at, title, description, completed
 		FROM todo
 		WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 		
@@ -215,11 +215,14 @@ func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
 	rows, err := m.DB.QueryContext(ctx, query, args...)
 
 	if err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
 	//close the result set
 	defer rows.Close()
+
+	//totalRecord
+	totalRecords := 0
 
 	//Initialize an empty slice to hold Todo data
 	todos := []*Todo{}
@@ -230,6 +233,7 @@ func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
 		var todo Todo
 		//scan the values from row into todo struct
 		err := rows.Scan(
+			&totalRecords,
 			&todo.ID,
 			&todo.CreatedAt,
 			&todo.Title,
@@ -238,7 +242,7 @@ func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
 		)
 
 		if err != nil {
-			return nil, err
+			return nil, Metadata{}, err
 		}
 
 		//add the todo to our slice
@@ -249,10 +253,11 @@ func (m TodoModel) GetAll(title string, filters Filters) ([]*Todo, error) {
 	//Check for errors after looping through the result set
 
 	if err = rows.Err(); err != nil {
-		return nil, err
+		return nil, Metadata{}, err
 	}
 
+	metadata := calculateMetadata(totalRecords, filters.Page, filters.PageSize)
 	// return slice of todos
-	return todos, nil
+	return todos, metadata, nil
 
 }
